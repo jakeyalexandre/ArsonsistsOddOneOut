@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odd One Out</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: rgba(255,255,255,0.08);
+    --accent: #c8f060;
+    --accent2: #7b5cf0;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --danger: #f06060;
+    --warning: #f0a060;
+    --success: #60f0a0;
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -40%;
+    left: -20%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(ellipse, rgba(123,92,240,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -30%;
+    right: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(200,240,96,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 560px;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .logo h1 span {
+    color: var(--accent);
+  }
+
+  .logo p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 16px;
+    font-family: 'Syne', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent2);
+  }
+
+  input[type="text"]::placeholder {
+    color: var(--muted);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 15px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0f;
+  }
+
+  .btn-primary:hover { background: #d8ff70; }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent2); }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+    margin-top: 10px;
+  }
+
+  .btn-danger:hover { opacity: 0.85; }
+
+  .btn-vote {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-vote:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-vote.selected {
+    border-color: var(--accent);
+    background: rgba(200, 240, 96, 0.1);
+    color: var(--accent);
+  }
+
+  .btn-vote .avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .lobby-code {
+    font-family: 'DM Mono', monospace;
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 8px;
+    text-align: center;
+    padding: 20px;
+    background: var(--surface2);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    user-select: all;
+    border: 1px dashed rgba(200,240,96,0.3);
+    transition: background 0.2s;
+  }
+
+  .lobby-code:hover { background: rgba(200,240,96,0.08); }
+
+  .copy-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .player-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .player-item.host-item {
+    border-color: rgba(200,240,96,0.3);
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .av-0 { background: rgba(123,92,240,0.25); color: #9b7cf0; }
+  .av-1 { background: rgba(200,240,96,0.2); color: #b8e040; }
+  .av-2 { background: rgba(240,96,96,0.2); color: #f07070; }
+  .av-3 { background: rgba(96,200,240,0.2); color: #60c8f0; }
+
+  .player-name {
+    font-size: 15px;
+    font-weight: 700;
+    flex: 1;
+  }
+
+  .player-badge {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    background: rgba(200,240,96,0.12);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  .slot-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+
+  .question-tag {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .question-text {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  .answer-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 100px;
+    font-size: 15px;
+    font-family: 'Syne', sans-serif;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    resize: none;
+    transition: border-color 0.2s;
+  }
+
+  .answer-area:focus { border-color: var(--accent2); }
+
+  .answer-area::placeholder { color: var(--muted); }
+
+  .answers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .answer-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .answer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .answer-card-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .answer-card-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .status-dot.ready { background: var(--success); }
+
+  .timer {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .timer.urgent { color: var(--danger); }
+
+  .result-reveal {
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  .result-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 auto 16px;
+  }
+
+  .result-label {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .result-name {
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  .result-verdict {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .vote-tally {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+  }
+
+  .vote-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .vote-bar-wrap {
+    flex: 1;
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .vote-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent2);
+    transition: width 0.6s ease;
+  }
+
+  .vote-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 20px;
+    text-align: right;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    z-index: 100;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .waiting-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+  }
+
+  .phase-indicator {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .phase-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  .phase-dot.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    width: 20px;
+    border-radius: 3px;
+  }
+
+  .phase-dot.done {
+    background: var(--accent2);
+    border-color: var(--accent2);
+  }
+
+  .hidden { display: none !important; }
+
+  .questions-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    background: rgba(240,96,96,0.15);
+    color: var(--danger);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  .normal-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    background: rgba(200,240,96,0.12);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  textarea { resize: vertical; }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    text-align: center;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="logo">
+    <h1>ODD <span>ONE</span> OUT</h1>
+    <p>// find the imposter</p>
+  </div>
+
+  <!-- PHASE: Home -->
+  <div id="phase-home">
+    <div class="card">
+      <div class="card-title">Your name</div>
+      <input type="text" id="input-name" placeholder="Enter your name..." maxlength="16">
+      <button class="btn btn-primary" onclick="hostGame()">Create Lobby</button>
+      <button class="btn btn-secondary" onclick="showJoin()">Join with Code</button>
+    </div>
+    <div id="join-section" class="card hidden">
+      <div class="card-title">Lobby code</div>
+      <input type="text" id="input-code" placeholder="Enter 4-letter code..." maxlength="4" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn btn-primary" onclick="joinGame()">Join Lobby</button>
+      <div id="join-error" class="error-msg hidden"></div>
+    </div>
+  </div>
+
+  <!-- PHASE: Lobby (Host view) -->
+  <div id="phase-lobby" class="hidden">
+    <div class="phase-indicator">
+      <div class="phase-dot active" id="pd1"></div>
+      <div class="phase-dot" id="pd2"></div>
+      <div class="phase-dot" id="pd3"></div>
+      <div class="phase-dot" id="pd4"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Lobby code — share this</div>
+      <div class="lobby-code" id="display-code" onclick="copyCode()">????</div>
+      <div class="copy-hint">tap to copy</div>
+      <div class="player-list" id="player-list"></div>
+      <div id="start-hint" style="text-align:center;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px;" class="hidden">Need 4 players to start</div>
+      <button class="btn btn-primary hidden" id="btn-start" onclick="hostStartGame()">Start Game →</button>
+    </div>
+  </div>
+
+  <!-- PHASE: Waiting (non-host) -->
+  <div id="phase-waiting" class="hidden">
+    <div class="phase-indicator">
+      <div class="phase-dot active"></div>
+      <div class="phase-dot"></div>
+      <div class="phase-dot"></div>
+      <div class="phase-dot"></div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="card-title">Lobby</div>
+      <div class="lobby-code" id="display-code-wait">????</div>
+      <div class="copy-hint">tap to copy</div>
+      <div class="player-list" id="player-list-wait"></div>
+      <p style="color:var(--muted);font-size:14px;font-family:'DM Mono',monospace;" class="waiting-dots">Waiting for host to start</p>
+    </div>
+  </div>
+
+  <!-- PHASE: Question -->
+  <div id="phase-question" class="hidden">
+    <div class="phase-indicator">
+      <div class="phase-dot done"></div>
+      <div class="phase-dot active"></div>
+      <div class="phase-dot"></div>
+      <div class="phase-dot"></div>
+    </div>
+    <div class="card">
+      <div id="my-role-tag"></div>
+      <div class="question-text" id="my-question-text"></div>
+      <div class="card-title">Your answer</div>
+      <textarea class="answer-area" id="my-answer" placeholder="Type your answer here... keep it natural, don't give too much away!" rows="4"></textarea>
+      <div style="height:16px"></div>
+      <button class="btn btn-primary" onclick="submitAnswer()">Submit Answer →</button>
+    </div>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;">
+      Don't reveal your question — just answer naturally
+    </div>
+  </div>
+
+  <!-- PHASE: Discussion -->
+  <div id="phase-discussion" class="hidden">
+    <div class="phase-indicator">
+      <div class="phase-dot done"></div>
+      <div class="phase-dot done"></div>
+      <div class="phase-dot active"></div>
+      <div class="phase-dot"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">All answers — discuss & deduce</div>
+      <div class="answers-grid" id="answers-grid"></div>
+      <div class="divider"></div>
+      <div class="card-title">Vote — who's the odd one out?</div>
+      <div id="vote-options"></div>
+      <button class="btn btn-primary" id="btn-submit-vote" onclick="submitVote()">Lock in Vote →</button>
+    </div>
+  </div>
+
+  <!-- PHASE: Results -->
+  <div id="phase-results" class="hidden">
+    <div class="phase-indicator">
+      <div class="phase-dot done"></div>
+      <div class="phase-dot done"></div>
+      <div class="phase-dot done"></div>
+      <div class="phase-dot active"></div>
+    </div>
+    <div class="card">
+      <div class="result-reveal" id="result-reveal"></div>
+      <div class="divider"></div>
+      <div class="card-title">Vote breakdown</div>
+      <div class="vote-tally" id="vote-tally"></div>
+      <div class="divider"></div>
+      <div class="card-title">The questions were</div>
+      <div id="questions-reveal" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+    <button class="btn btn-secondary" onclick="playAgain()" style="margin-top:16px;width:100%;">Play Again</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const QUESTION_PAIRS = [
+  { normal: "What's your favourite holiday destination?", imposter: "What's your favourite holiday activity?" },
+  { normal: "What's your go-to comfort food when you're sad?", imposter: "What's your go-to comfort food when you're celebrating?" },
+  { normal: "Describe your dream bedroom.", imposter: "Describe your dream living room." },
+  { normal: "What would you bring to a desert island?", imposter: "What would you bring to a trip to the moon?" },
+  { normal: "What's the best movie you've ever seen?", imposter: "What's the worst movie you've ever seen?" },
+  { normal: "Describe the perfect Sunday morning.", imposter: "Describe the perfect Saturday night." },
+  { normal: "What's a hobby you wish you had time for?", imposter: "What's a hobby you've given up on?" },
+  { normal: "What's your favourite season and why?", imposter: "What's your least favourite season and why?" },
+  { normal: "What superpower would you want?", imposter: "What superpower would you never want?" },
+  { normal: "Describe your ideal job.", imposter: "Describe your nightmare job." },
+  { normal: "What's your favourite way to spend a rainy day?", imposter: "What's your favourite way to spend a sunny day?" },
+  { normal: "What would your last meal be?", imposter: "What food would you ban from the world?" },
+  { normal: "If you could live anywhere, where would it be?", imposter: "If you had to leave where you live, where would you never go?" },
+  { normal: "What's your morning routine like?", imposter: "What's your evening routine like?" },
+  { normal: "What's the best gift you've ever received?", imposter: "What's the worst gift you've ever received?" },
+];
+
+const AVATAR_COLORS = ['av-0','av-1','av-2','av-3'];
+
+let peer = null;
+let connections = {};
+let isHost = false;
+let myName = '';
+let myId = '';
+let lobbyCode = '';
+let hostConn = null;
+
+let players = [];
+let myIndex = -1;
+let impostorIndex = -1;
+let myQuestion = '';
+let myAnswer = '';
+let answersReceived = {};
+let votesReceived = {};
+let myVote = null;
+let currentQuestionPair = null;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function showPhase(name) {
+  ['home','lobby','waiting','question','discussion','results'].forEach(p => {
+    document.getElementById('phase-'+p).classList.add('hidden');
+  });
+  document.getElementById('phase-'+name).classList.remove('hidden');
+}
+
+function getInitials(name) {
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function renderPlayerList(containerId, playerArr) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement('div');
+    div.className = 'player-item' + (i === 0 ? ' host-item' : '');
+    if (playerArr[i]) {
+      const p = playerArr[i];
+      div.innerHTML = `
+        <div class="avatar ${AVATAR_COLORS[i]}">${getInitials(p.name)}</div>
+        <span class="player-name">${p.name}</span>
+        ${i === 0 ? '<span class="player-badge">host</span>' : ''}
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="avatar av-${i}" style="opacity:0.3">?</div>
+        <span class="slot-empty">waiting for player ${i+1}...</span>
+      `;
+    }
+    el.appendChild(div);
+  }
+}
+
+function showJoin() {
+  document.getElementById('join-section').classList.remove('hidden');
+}
+
+// HOST
+function hostGame() {
+  myName = document.getElementById('input-name').value.trim();
+  if (!myName) { showToast('Enter your name first!'); return; }
+  isHost = true;
+
+  lobbyCode = randomCode();
+  myId = 'ooo-' + lobbyCode + '-0';
+
+  peer = new Peer(myId, { debug: 0 });
+
+  peer.on('open', () => {
+    players = [{ name: myName, id: myId }];
+    myIndex = 0;
+    document.getElementById('display-code').textContent = lobbyCode;
+    renderPlayerList('player-list', players);
+    updateStartButton();
+    showPhase('lobby');
+  });
+
+  peer.on('connection', (conn) => {
+    conn.on('open', () => {
+      conn.on('data', (data) => handleHostReceive(data, conn));
+    });
+    conn.on('close', () => handlePlayerLeft(conn));
+  });
+
+  peer.on('error', (e) => showToast('Error: ' + e.type));
+}
+
+function randomCode() {
+  return Array.from({length:4}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*23)]).join('');
+}
+
+function handleHostReceive(data, conn) {
+  if (data.type === 'join') {
+    if (players.length >= 4) {
+      conn.send({ type: 'full' });
+      return;
+    }
+    const idx = players.length;
+    const player = { name: data.name, id: conn.peer, conn };
+    players.push(player);
+    connections[conn.peer] = conn;
+
+    conn.send({ type: 'joined', index: idx, players: players.map(p=>({name:p.name,id:p.id})) });
+
+    broadcastToAll({ type: 'players_update', players: players.map(p=>({name:p.name,id:p.id})) }, conn.peer);
+
+    renderPlayerList('player-list', players);
+    updateStartButton();
+  }
+  if (data.type === 'answer') {
+    answersReceived[data.playerIndex] = data.answer;
+    checkAllAnswers();
+  }
+  if (data.type === 'vote') {
+    votesReceived[data.playerIndex] = data.vote;
+    checkAllVotes();
+  }
+}
+
+function handlePlayerLeft(conn) {
+  players = players.filter(p => p.id !== conn.peer);
+  delete connections[conn.peer];
+  renderPlayerList('player-list', players);
+  updateStartButton();
+  broadcastToAll({ type: 'players_update', players: players.map(p=>({name:p.name,id:p.id})) });
+}
+
+function broadcastToAll(data, exceptId) {
+  players.forEach(p => {
+    if (p.conn && p.id !== myId && p.id !== exceptId) {
+      p.conn.send(data);
+    }
+  });
+}
+
+function updateStartButton() {
+  const btn = document.getElementById('btn-start');
+  const hint = document.getElementById('start-hint');
+  if (players.length === 4) {
+    btn.classList.remove('hidden');
+    hint.classList.add('hidden');
+  } else {
+    btn.classList.add('hidden');
+    hint.classList.remove('hidden');
+  }
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(lobbyCode).then(() => showToast('Code copied!'));
+}
+
+function hostStartGame() {
+  if (players.length < 4) { showToast('Need 4 players!'); return; }
+
+  impostorIndex = Math.floor(Math.random() * 4);
+  currentQuestionPair = QUESTION_PAIRS[Math.floor(Math.random() * QUESTION_PAIRS.length)];
+
+  players.forEach((p, i) => {
+    const q = (i === impostorIndex) ? currentQuestionPair.imposter : currentQuestionPair.normal;
+    if (p.conn) {
+      p.conn.send({
+        type: 'start_game',
+        question: q,
+        isImposter: i === impostorIndex,
+        playerIndex: i,
+        players: players.map(pl=>({name:pl.name,id:pl.id}))
+      });
+    }
+  });
+
+  myQuestion = (myIndex === impostorIndex) ? currentQuestionPair.imposter : currentQuestionPair.normal;
+  answersReceived = {};
+  votesReceived = {};
+  showQuestionPhase(myIndex === impostorIndex);
+}
+
+// JOINER
+function joinGame() {
+  myName = document.getElementById('input-name').value.trim();
+  const code = document.getElementById('input-code').value.trim().toUpperCase();
+  if (!myName) { showToast('Enter your name first!'); return; }
+  if (code.length !== 4) { showToast('Enter a 4-letter code!'); return; }
+
+  lobbyCode = code;
+  const hostId = 'ooo-' + code + '-0';
+  const errEl = document.getElementById('join-error');
+
+  peer = new Peer(undefined, { debug: 0 });
+
+  peer.on('open', (id) => {
+    myId = id;
+    hostConn = peer.connect(hostId, { reliable: true });
+
+    hostConn.on('open', () => {
+      hostConn.send({ type: 'join', name: myName });
+    });
+
+    hostConn.on('data', (data) => handleJoinerReceive(data));
+
+    hostConn.on('error', () => {
+      errEl.textContent = 'Could not connect. Check the code.';
+      errEl.classList.remove('hidden');
+    });
+  });
+
+  peer.on('error', () => {
+    errEl.textContent = 'Connection failed. Check the code.';
+    errEl.classList.remove('hidden');
+  });
+}
+
+function handleJoinerReceive(data) {
+  if (data.type === 'full') {
+    showToast('Lobby is full!');
+    return;
+  }
+  if (data.type === 'joined') {
+    myIndex = data.index;
+    players = data.players;
+    document.getElementById('display-code-wait').textContent = lobbyCode;
+    document.getElementById('display-code-wait').onclick = () => {
+      navigator.clipboard.writeText(lobbyCode).then(() => showToast('Code copied!'));
+    };
+    renderPlayerList('player-list-wait', players);
+    showPhase('waiting');
+  }
+  if (data.type === 'players_update') {
+    players = data.players;
+    renderPlayerList('player-list-wait', players);
+  }
+  if (data.type === 'start_game') {
+    myIndex = data.playerIndex;
+    players = data.players;
+    myQuestion = data.question;
+    impostorIndex = -1;
+    answersReceived = {};
+    votesReceived = {};
+    showQuestionPhase(data.isImposter);
+  }
+  if (data.type === 'all_answers') {
+    answersReceived = data.answers;
+    showDiscussionPhase();
+  }
+  if (data.type === 'results') {
+    showResultsPhase(data);
+  }
+}
+
+function showQuestionPhase(isImposter) {
+  const tag = document.getElementById('my-role-tag');
+  if (isImposter) {
+    tag.className = 'questions-tag';
+    tag.textContent = '⚠ You are the odd one out';
+  } else {
+    tag.className = 'normal-tag';
+    tag.textContent = '✓ You are with the majority';
+  }
+  document.getElementById('my-question-text').textContent = myQuestion;
+  document.getElementById('my-answer').value = '';
+  myAnswer = '';
+  showPhase('question');
+}
+
+function submitAnswer() {
+  myAnswer = document.getElementById('my-answer').value.trim();
+  if (!myAnswer) { showToast('Write an answer first!'); return; }
+
+  if (isHost) {
+    answersReceived[myIndex] = myAnswer;
+    broadcastToAll({ type: 'answer', playerIndex: myIndex, answer: myAnswer });
+    checkAllAnswers();
+  } else {
+    hostConn.send({ type: 'answer', playerIndex: myIndex, answer: myAnswer });
+    document.querySelector('#phase-question .btn-primary').textContent = 'Waiting for others…';
+    document.querySelector('#phase-question .btn-primary').disabled = true;
+  }
+}
+
+function checkAllAnswers() {
+  if (Object.keys(answersReceived).length === 4) {
+    broadcastToAll({ type: 'all_answers', answers: answersReceived });
+    showDiscussionPhase();
+  }
+}
+
+function showDiscussionPhase() {
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = '';
+  players.forEach((p, i) => {
+    const ans = answersReceived[i] || '(no answer)';
+    const div = document.createElement('div');
+    div.className = 'answer-card';
+    div.innerHTML = `
+      <div class="answer-card-header">
+        <div class="avatar-sm avatar ${AVATAR_COLORS[i]}" style="width:28px;height:28px;font-size:11px;">${getInitials(p.name)}</div>
+        <span class="answer-card-name">${p.name}</span>
+      </div>
+      <div class="answer-card-text">${ans}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  const voteEl = document.getElementById('vote-options');
+  voteEl.innerHTML = '';
+  myVote = null;
+  players.forEach((p, i) => {
+    if (i === myIndex) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-vote';
+    btn.dataset.idx = i;
+    btn.innerHTML = `
+      <div class="avatar-sm avatar ${AVATAR_COLORS[i]}" style="width:32px;height:32px;font-size:12px;">${getInitials(p.name)}</div>
+      ${p.name}
+    `;
+    btn.onclick = () => selectVote(i, btn);
+    voteEl.appendChild(btn);
+  });
+
+  document.getElementById('btn-submit-vote').disabled = false;
+  document.getElementById('btn-submit-vote').textContent = 'Lock in Vote →';
+  showPhase('discussion');
+}
+
+function selectVote(idx, btn) {
+  document.querySelectorAll('.btn-vote').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  myVote = idx;
+}
+
+function submitVote() {
+  if (myVote === null) { showToast('Select someone to vote for!'); return; }
+  document.getElementById('btn-submit-vote').textContent = 'Vote locked — waiting…';
+  document.getElementById('btn-submit-vote').disabled = true;
+
+  if (isHost) {
+    votesReceived[myIndex] = myVote;
+    broadcastToAll({ type: 'vote', playerIndex: myIndex, vote: myVote });
+    checkAllVotes();
+  } else {
+    hostConn.send({ type: 'vote', playerIndex: myIndex, vote: myVote });
+  }
+}
+
+function checkAllVotes() {
+  if (Object.keys(votesReceived).length === 4) {
+    const tally = {};
+    players.forEach((_, i) => tally[i] = 0);
+    Object.values(votesReceived).forEach(v => { tally[v] = (tally[v]||0) + 1; });
+
+    let mostVoted = 0;
+    let maxVotes = -1;
+    Object.entries(tally).forEach(([idx, count]) => {
+      if (count > maxVotes) { maxVotes = count; mostVoted = parseInt(idx); }
+    });
+
+    impostorIndex = -1;
+    players.forEach((_, i) => {
+      const q = answersReceived[i];
+      if (q !== undefined) { /* determined by host */ }
+    });
+
+    const resultData = {
+      type: 'results',
+      tally,
+      mostVoted,
+      impostorIndex: findImpostor(),
+      normalQuestion: currentQuestionPair ? currentQuestionPair.normal : '?',
+      imposterQuestion: currentQuestionPair ? currentQuestionPair.imposter : '?',
+    };
+
+    broadcastToAll(resultData);
+    showResultsPhase(resultData);
+  }
+}
+
+function findImpostor() {
+  if (!isHost) return impostorIndex;
+  let imp = -1;
+  players.forEach((p, i) => {
+    if (p.id === myId && myIndex === i) {
+      if (i === impostorIndex) imp = i;
+    }
+  });
+  return impostorIndex;
+}
+
+function showResultsPhase(data) {
+  const { tally, mostVoted, impostorIndex: imp, normalQuestion, imposterQuestion } = data;
+  const caught = mostVoted === imp;
+  const imposterName = players[imp] ? players[imp].name : '?';
+
+  const revealEl = document.getElementById('result-reveal');
+  revealEl.innerHTML = `
+    <div class="result-label">the odd one out was</div>
+    <div class="result-avatar ${AVATAR_COLORS[imp]}" style="width:80px;height:80px;margin:0 auto 16px;">${getInitials(imposterName)}</div>
+    <div class="result-name">${imposterName}</div>
+    <div class="result-verdict" style="margin-top:12px;font-size:18px;font-weight:800;color:${caught ? 'var(--success)' : 'var(--danger)'}">
+      ${caught ? '✓ Caught!' : '✗ Got away!'}
+    </div>
+    <div class="result-verdict">${caught ? 'The majority voted correctly.' : 'The odd one out fooled everyone.'}</div>
+  `;
+
+  const tallyEl = document.getElementById('vote-tally');
+  tallyEl.innerHTML = '';
+  const maxVotes = Math.max(...Object.values(tally));
+  players.forEach((p, i) => {
+    const votes = tally[i] || 0;
+    const row = document.createElement('div');
+    row.className = 'vote-row';
+    row.innerHTML = `
+      <div class="avatar-sm avatar ${AVATAR_COLORS[i]}" style="width:24px;height:24px;font-size:10px;flex-shrink:0;">${getInitials(p.name)}</div>
+      <span style="font-size:13px;min-width:80px;">${p.name}</span>
+      <div class="vote-bar-wrap">
+        <div class="vote-bar-fill" style="width:${maxVotes > 0 ? (votes/4)*100 : 0}%"></div>
+      </div>
+      <span class="vote-count">${votes}</span>
+    `;
+    tallyEl.appendChild(row);
+  });
+
+  const qReveal = document.getElementById('questions-reveal');
+  qReveal.innerHTML = `
+    <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border:1px solid rgba(200,240,96,0.2);">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);margin-bottom:6px;">MAJORITY (3 players)</div>
+      <div style="font-size:15px;font-weight:700;">${normalQuestion || '?'}</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;border:1px solid rgba(240,96,96,0.2);">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--danger);margin-bottom:6px;">ODD ONE OUT</div>
+      <div style="font-size:15px;font-weight:700;">${imposterQuestion || '?'}</div>
+    </div>
+  `;
+
+  showPhase('results');
+}
+
+function playAgain() {
+  if (isHost) {
+    broadcastToAll({ type: 'restart' });
+    resetToLobby();
+  } else {
+    resetToLobby();
+  }
+}
+
+function resetToLobby() {
+  answersReceived = {};
+  votesReceived = {};
+  myVote = null;
+  myAnswer = '';
+
+  if (isHost) {
+    renderPlayerList('player-list', players);
+    updateStartButton();
+    showPhase('lobby');
+  } else {
+    if (hostConn) hostConn.on('data', handleJoinerReceive);
+    renderPlayerList('player-list-wait', players);
+    showPhase('waiting');
+  }
+}
+
+// Also handle restart message for joiners
+const _origHandle = handleJoinerReceive;
+function handleJoinerReceive(data) {
+  if (data.type === 'restart') {
+    resetToLobby();
+    return;
+  }
+  _origHandle(data);
+}
+</script>
+</body>
+</html>
